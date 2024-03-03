@@ -161,6 +161,20 @@ router.get("/requests/:id_student", async (req, res) => {
   }
 });
 
+router.get("/fotky/:id_internat", async (req, res) => {
+  const { id_internat } = req.params;
+  try {
+    const result = await client.query(
+      "SELECT id_fotka, ENCODE(fotka,'base64') as fotka, id_internat,popis FROM fotky_intraky WHERE id_internat = $1",
+      [id_internat]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error retrieving photos for dormitory", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));
 });
