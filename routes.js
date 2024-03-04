@@ -163,11 +163,19 @@ router.get("/requests/:id_student", async (req, res) => {
 
 router.get("/fotky/:id_internat", async (req, res) => {
   const { id_internat } = req.params;
+  const { typ } = req.query;
+
   try {
-    const result = await client.query(
-      "SELECT id_fotka, ENCODE(fotka,'base64') as fotka, id_internat,popis FROM fotky_intraky WHERE id_internat = $1",
-      [id_internat]
-    );
+    let query =
+      "SELECT id_fotka, ENCODE(fotka,'base64') as fotka, id_internat, typ FROM fotky_intraky WHERE id_internat = $1";
+    let values = [id_internat];
+
+    if (typ) {
+      query += " AND typ = $2";
+      values.push(typ);
+    }
+
+    const result = await client.query(query, values);
     res.json(result.rows);
   } catch (error) {
     console.error("Error retrieving photos for dormitory", error);
