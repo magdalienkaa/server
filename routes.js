@@ -56,7 +56,7 @@ router.post("/login", async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      res.status(401).json({ success: false, message: "Invalid credentials" });
+      res.status(401).json({ success: false, message: "Neplatné údaje." });
       return;
     }
 
