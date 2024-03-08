@@ -6,6 +6,10 @@ const cors = require("cors");
 app.use(cors());
 app.use(express.json());
 
+app.get("/", async (req, res) => {
+  console.log("Ahoj svet");
+});
+
 app.use("/api", routes);
 
 const PORT = process.env.PORT || 5000;

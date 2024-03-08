@@ -8,6 +8,6 @@ const client = new Client({
   database: "StudentAccommodationDB",
 });
 
-client.connect();
+// client.connect();
 
 module.exports = client;
