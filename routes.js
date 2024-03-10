@@ -183,24 +183,6 @@ router.get("/fotky/:id_internat", async (req, res) => {
   }
 });
 
-router.get("/internaty/suradnice/:id_internat", async (req, res) => {
-  const { id_internat } = req.params;
-  try {
-    const result = await pool.query(
-      "SELECT id_internat, adresa, nazov, suradnice FROM internat WHERE id_internat = $1",
-      [id_internat]
-    );
-    const internat = result.rows[0];
-    if (!internat) {
-      return res.status(404).json({ message: "Internat not found" });
-    }
-    res.json(internat);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
 router.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));
 });
