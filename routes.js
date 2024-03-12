@@ -187,4 +187,26 @@ router.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));
 });
 
+router.delete("/request/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await client.query("DELETE FROM ziadosti WHERE id = $1", [
+      id,
+    ]);
+
+    if (result.rowCount === 1) {
+      res
+        .status(200)
+        .json({ success: true, message: "Žiadosť bola úspešne odstránená" });
+    } else {
+      res
+        .status(404)
+        .json({ success: false, message: "Žiadosť nebola nájdená" });
+    }
+  } catch (error) {
+    console.error("Chyba pri odstraňovaní žiadosti:", error);
+    res.status(500).json({ success: false, error: "Interná serverová chyba" });
+  }
+});
 module.exports = router;
