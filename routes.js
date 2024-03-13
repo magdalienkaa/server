@@ -99,7 +99,7 @@ router.post("/select/:id", async (req, res) => {
 
   try {
     const studentHasRoom = await client.query(
-      "SELECT id_izba FROM izba WHERE id_student = $1",
+      "SELECT id_izba FROM ziadosti WHERE id_student = $1",
       [id_student]
     );
     if (studentHasRoom.rows.length > 0) {
@@ -110,7 +110,7 @@ router.post("/select/:id", async (req, res) => {
     }
 
     const roomAlreadySelected = await client.query(
-      "SELECT id_student FROM izba WHERE id_izba = $1",
+      "SELECT id_student FROM ziadosti WHERE id_izba = $1",
       [id]
     );
     if (
@@ -119,15 +119,9 @@ router.post("/select/:id", async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        error: "The room has already been selected by another student",
+        error: "Izba už bola zvolená iným študentom.",
       });
     }
-
-    await client.query("UPDATE izba SET id_student = $1 WHERE id_izba = $2", [
-      id_student,
-      id,
-    ]);
-
     const result = await client.query(
       "SELECT id_internat FROM izba WHERE id_izba = $1",
       [id]
