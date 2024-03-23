@@ -1,12 +1,20 @@
 //require("dotenv").config();
 const { Client } = require("pg");
 
+// const client = new Client({
+//   host: "localhost",
+//   user: "postgres",
+//   port: 5432,
+//   password: "bc3bhi2201",
+//   database: "StudentAccommodationDB",
+// });
+
 const client = new Client({
-  host: "localhost",
+  host: "roundhouse.proxy.rlwy.net",
   user: "postgres",
-  port: 5432,
-  password: "bc3bhi2201",
-  database: "StudentAccommodationDB",
+  port: 46497,
+  password: "YjPiiTSfGKwWdLXyibhimVaIvZTFPIKW",
+  database: "railway",
 });
 
 // const client = new Client({
