@@ -248,4 +248,42 @@ router.delete("/request/:id", async (req, res) => {
     res.status(500).json({ success: false, error: "Interná serverová chyba" });
   }
 });
+router.put("/approve/:id", async (req, res) => {
+  const { id } = req.params;
+  const { id_student } = req.body;
+
+  try {
+    const requestExists = await client.query(
+      "SELECT * FROM ziadosti WHERE id = $1",
+      [id]
+    );
+    if (requestExists.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "Žiadosť neexistuje",
+      });
+    }
+
+    const id_izba = requestExists.rows[0].id_izba; // Získajte id_izba z existujúcej žiadosti
+
+    await client.query("UPDATE izba SET id_student = $1 WHERE id_izba = $2", [
+      id_student,
+      id_izba, // Použite id_izba z existujúcej žiadosti
+    ]);
+
+    await client.query(
+      "UPDATE student SET id_izba = $1 WHERE id_student = $2",
+      [id_izba, id_student] // Tu pridajte id_izba pre študenta
+    );
+
+    await client.query("DELETE FROM ziadosti WHERE id = $1", [id]);
+    res
+      .status(200)
+      .json({ success: true, message: "Žiadosť bola úspešne schválená" });
+  } catch (error) {
+    console.error("Chyba pri schvaľovaní žiadosti:", error);
+    res.status(500).json({ success: false, error: "Interná chyba servera" });
+  }
+});
+
 module.exports = router;
