@@ -92,12 +92,33 @@ router.get("/izba", async (req, res) => {
       .json({ message: "Chyba pri načítaní informácií o izbách." });
   }
 });
-
 router.post("/select/:id", async (req, res) => {
   const { id } = req.params;
   const { id_student } = req.body;
 
+  const getUserRole = async (id_student) => {
+    try {
+      const result = await client.query(
+        "SELECT role FROM student WHERE id_student = $1",
+        [id_student]
+      );
+      return result.rows[0].role;
+    } catch (error) {
+      console.error("Chyba pri získavaní role používateľa:", error);
+      throw new Error("Nepodarilo sa získať rolu používateľa");
+    }
+  };
+
   try {
+    const userRole = await getUserRole(id_student);
+
+    if (userRole === "admin") {
+      return res.status(400).json({
+        success: false,
+        error: "Admin nemôže vybrať izbu",
+      });
+    }
+
     const studentHasRoom = await client.query(
       "SELECT id_izba FROM ziadosti WHERE id_student = $1",
       [id_student]
@@ -105,7 +126,7 @@ router.post("/select/:id", async (req, res) => {
     if (studentHasRoom.rows.length > 0) {
       return res.status(400).json({
         success: false,
-        error: "The student has already selected a room",
+        error: "Študent už má vybratú izbu",
       });
     }
 
@@ -119,9 +140,10 @@ router.post("/select/:id", async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        error: "Izba už bola zvolená iným študentom.",
+        error: "Izbu už zvolil iný študent",
       });
     }
+
     const result = await client.query(
       "SELECT id_internat FROM izba WHERE id_izba = $1",
       [id]
@@ -132,12 +154,10 @@ router.post("/select/:id", async (req, res) => {
       [id_student, id_internat, id, "nevybavené"]
     );
 
-    res
-      .status(200)
-      .json({ success: true, message: "Room selected successfully" });
+    res.status(200).json({ success: true, message: "Izba úspešne vybratá" });
   } catch (error) {
-    console.error("Error selecting room:", error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
+    console.error("Chyba pri výbere izby:", error);
+    res.status(500).json({ success: false, error: "Interná chyba servera" });
   }
 });
 
