@@ -164,7 +164,8 @@ router.get("/requests/:id_student", async (req, res) => {
     let queryParams = [id_student];
 
     if (userRole === "admin") {
-      query = "SELECT * FROM ziadosti";
+      query =
+        "SELECT ziadosti.*, izba.cislo_izby, ziadosti.id_student FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba";
       queryParams = [];
     } else {
       query =
