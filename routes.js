@@ -143,11 +143,35 @@ router.post("/select/:id", async (req, res) => {
 
 router.get("/requests/:id_student", async (req, res) => {
   const { id_student } = req.params;
+
+  const getUserRole = async (id_student) => {
+    try {
+      const result = await client.query(
+        "SELECT role FROM student WHERE id_student = $1",
+        [id_student]
+      );
+      return result.rows[0].role;
+    } catch (error) {
+      console.error("Error fetching user role:", error);
+      throw new Error("Failed to fetch user role");
+    }
+  };
+
+  const userRole = await getUserRole(id_student);
+
   try {
-    const result = await client.query(
-      "SELECT ziadosti.*, izba.cislo_izby FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba WHERE ziadosti.id_student = $1",
-      [id_student]
-    );
+    let query;
+    let queryParams = [id_student];
+
+    if (userRole === "admin") {
+      query = "SELECT * FROM ziadosti";
+      queryParams = [];
+    } else {
+      query =
+        "SELECT ziadosti.*, izba.cislo_izby FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba WHERE ziadosti.id_student = $1";
+    }
+
+    const result = await client.query(query, queryParams);
     res.json(result.rows);
   } catch (error) {
     console.error("Error retrieving requests:", error);
