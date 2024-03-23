@@ -51,7 +51,7 @@ router.post("/login", async (req, res) => {
   console.log("Login attempt:", email);
   try {
     const result = await client.query(
-      "SELECT id_student, meno, priezvisko, heslo, body FROM student WHERE email = $1",
+      "SELECT id_student, meno, priezvisko, heslo, body, role FROM student WHERE email = $1",
       [email]
     );
 
