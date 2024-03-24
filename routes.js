@@ -50,7 +50,7 @@ router.post("/login", async (req, res) => {
 
   try {
     const result = await client.query(
-      "SELECT id_student, meno, priezvisko, heslo, body, role FROM student WHERE email = $1",
+      "SELECT * FROM student WHERE email = $1",
       [email]
     );
 
@@ -77,6 +77,7 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ success: false, error: "Interná chyba servera." });
   }
 });
+
 router.get("/izba", async (req, res) => {
   try {
     const result = await client.query(`
