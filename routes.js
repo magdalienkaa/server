@@ -47,8 +47,7 @@ router.get("/info/:id", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  console.log("Received password:", password);
-  console.log("Login attempt:", email);
+
   try {
     const result = await client.query(
       "SELECT id_student, meno, priezvisko, heslo, body, role FROM student WHERE email = $1",
@@ -56,27 +55,26 @@ router.post("/login", async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      res.status(401).json({ success: false, message: "Neplatné údaje." });
+      res
+        .status(401)
+        .json({ success: false, message: "Neplatné prihlasovacie údaje." });
       return;
     }
 
     const student = result.rows[0];
-    console.log("Retrieved student:", student);
-
     const isPasswordValid = password === student.heslo;
-    console.log("Password comparison result:", isPasswordValid);
 
     if (isPasswordValid) {
       const { heslo, ...user } = student;
-      console.log("Logged in user:", user);
       res.json({ success: true, user });
     } else {
-      console.log("Passwords do not match");
-      res.status(401).json({ success: false, message: "Invalid credentials" });
+      res
+        .status(401)
+        .json({ success: false, message: "Neplatné prihlasovacie údaje." });
     }
   } catch (error) {
-    console.error("Error during login:", error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
+    console.error("Chyba počas prihlasovania.", error);
+    res.status(500).json({ success: false, error: "Interná chyba servera." });
   }
 });
 
