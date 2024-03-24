@@ -77,10 +77,13 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ success: false, error: "Interná chyba servera." });
   }
 });
-
 router.get("/izba", async (req, res) => {
   try {
-    const result = await client.query("SELECT * FROM izba");
+    const result = await client.query(`
+      SELECT izba.*, internat.nazov_internatu
+      FROM izba
+      JOIN internat ON izba.id_internat = internat.id_internat
+    `);
 
     res.json(result.rows);
   } catch (error) {
@@ -90,6 +93,7 @@ router.get("/izba", async (req, res) => {
       .json({ message: "Chyba pri načítaní informácií o izbách." });
   }
 });
+
 router.post("/select/:id", async (req, res) => {
   const { id } = req.params;
   const { id_student } = req.body;
