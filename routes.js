@@ -80,7 +80,7 @@ router.post("/login", async (req, res) => {
 router.get("/izba", async (req, res) => {
   try {
     const result = await client.query(`
-      SELECT izba.*, internat.nazov_internatu
+      SELECT izba.*, internat.nazov
       FROM izba
       JOIN internat ON izba.id_internat = internat.id_internat
     `);
