@@ -279,11 +279,12 @@ router.put("/approve/:id", async (req, res) => {
       [id_izba, id_student]
     );
 
+    await client.query("UPDATE ziadosti SET stav = NULL WHERE id = $1", [id]);
+
     await client.query("UPDATE ziadosti SET stav = $1 WHERE id = $2", [
-      "Povtrdená",
+      "schválené",
       id,
     ]);
-
     res
       .status(200)
       .json({ success: true, message: "Žiadosť bola úspešne schválená" });
