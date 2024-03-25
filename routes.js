@@ -267,19 +267,23 @@ router.put("/approve/:id", async (req, res) => {
       });
     }
 
-    const id_izba = requestExists.rows[0].id_izba; // Získajte id_izba z existujúcej žiadosti
+    const id_izba = requestExists.rows[0].id_izba;
 
     await client.query("UPDATE izba SET id_student = $1 WHERE id_izba = $2", [
       id_student,
-      id_izba, // Použite id_izba z existujúcej žiadosti
+      id_izba,
     ]);
 
     await client.query(
       "UPDATE student SET id_izba = $1 WHERE id_student = $2",
-      [id_izba, id_student] // Tu pridajte id_izba pre študenta
+      [id_izba, id_student]
     );
 
-    await client.query("DELETE FROM ziadosti WHERE id = $1", [id]);
+    await client.query("UPDATE ziadosti SET stav = $1 WHERE id = $2", [
+      "Povtrdená",
+      id,
+    ]);
+
     res
       .status(200)
       .json({ success: true, message: "Žiadosť bola úspešne schválená" });
