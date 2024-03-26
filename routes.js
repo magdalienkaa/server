@@ -91,8 +91,8 @@ router.get("/izba", async (req, res) => {
   }
 });
 
-router.post("/select/:id_izba", async (req, res) => {
-  const { id_izba } = req.params;
+router.post("/select/:id", async (req, res) => {
+  const { id } = req.params;
   const { id_student } = req.body;
 
   const getUserRole = async (id_student) => {
