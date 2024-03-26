@@ -122,6 +122,7 @@ router.post("/select/:id", async (req, res) => {
       "SELECT id_izba, stav FROM ziadosti WHERE id_student = $1",
       [id_student]
     );
+
     if (studentHasRoom.rows.length > 0) {
       const stav = studentHasRoom.rows[0].stav;
       if (stav === "nevybavené" || stav === "schválené") {
@@ -130,6 +131,15 @@ router.post("/select/:id", async (req, res) => {
           error: "Študent už má vybratú izbu!",
         });
       } else if (stav === "zamietnuté") {
+        const result = await client.query(
+          "SELECT id_internat FROM izba WHERE id_izba = $1",
+          [id]
+        );
+        const id_internat = result.rows[0].id_internat;
+        await client.query(
+          "INSERT INTO ziadosti(id_student, id_internat, id_izba, stav) VALUES ($1, $2, $3, $4)",
+          [id_student, id_internat, id, "nevybavené"]
+        );
         return res.status(200).json({
           success: true,
           message: "Študent môže opäť vybrať izbu.",
@@ -142,6 +152,7 @@ router.post("/select/:id", async (req, res) => {
       "SELECT id_student FROM ziadosti WHERE id_izba = $1",
       [id]
     );
+
     if (
       roomAlreadySelected.rows.length > 0 &&
       roomAlreadySelected.rows[0].id_student
