@@ -91,8 +91,8 @@ router.get("/izba", async (req, res) => {
   }
 });
 
-router.post("/select/:id", async (req, res) => {
-  const { id } = req.params;
+router.post("/select/:id_izba", async (req, res) => {
+  const { id_izba } = req.params;
   const { id_student } = req.body;
 
   const getUserRole = async (id_student) => {
@@ -119,14 +119,23 @@ router.post("/select/:id", async (req, res) => {
     }
 
     const studentHasRoom = await client.query(
-      "SELECT id_izba FROM ziadosti WHERE id_student = $1",
+      "SELECT id_izba, stav FROM ziadosti WHERE id_student = $1",
       [id_student]
     );
     if (studentHasRoom.rows.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Študent už má vybratú izbu!",
-      });
+      const stav = studentHasRoom.rows[0].stav;
+      if (stav === "nevybavené" || stav === "schválené") {
+        return res.status(400).json({
+          success: false,
+          error: "Študent už má vybratú izbu!",
+        });
+      } else if (stav === "zamietnuté") {
+        return res.status(200).json({
+          success: true,
+          message: "Študent môže opäť vybrať izbu.",
+          alert: "Študent môže opäť vybrať izbu.",
+        });
+      }
     }
 
     const roomAlreadySelected = await client.query(
@@ -305,6 +314,15 @@ router.put("/reject/:id", async (req, res) => {
     await client.query(
       "UPDATE ziadosti SET stav = 'zamietnuté' WHERE id = $1",
       [id]
+    );
+
+    await client.query("UPDATE izba SET id_student = NULL WHERE id_izba = $1", [
+      requestExists.rows[0].id_izba,
+    ]);
+
+    await client.query(
+      "UPDATE student SET id_izba = NULL WHERE id_student = $1",
+      [requestExists.rows[0].id_student]
     );
 
     res
