@@ -8,22 +8,20 @@ router.use(express.static(path.join(__dirname, "frontend", "build")));
 router.use(bodyParser.json());
 
 router.get("/home", async (req, res) => {
-  console.log("Retrieving information about dormitories...");
   try {
     const result = await client.query(
       "SELECT id_internat, nazov, popis, ENCODE(fotky,'base64') as fotky FROM internat"
     );
-    console.log("Retrieved dormitories:", result.rows);
+    console.log("Získané informácie o internátoch:", result.rows);
     res.json(result.rows);
   } catch (error) {
-    console.error("Error retrieving information about dormitories:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Chyba pri získavaní informácií o internátoch:", error);
+    res.status(500).json({ error: "Interná chyba servera" });
   }
 });
 
 router.get("/info/:id", async (req, res) => {
   const internatId = req.params.id;
-  console.log("Retrieving information about dormitory with id:", internatId);
 
   try {
     const result = await client.query(
@@ -32,16 +30,14 @@ router.get("/info/:id", async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      console.log("Dormitory not found with id:", internatId);
-      return res.status(404).json({ error: "Dormitory not found" });
+      return res.status(404).json({ error: "Internát nebol nájdený" });
     }
 
     const internatInfo = result.rows[0];
-    console.log("Retrieved dormitory info:", internatInfo);
     res.json(internatInfo);
   } catch (error) {
-    console.error("Error retrieving dormitory info:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Chyba pri získavaní informácií o internáte:", error);
+    res.status(500).json({ error: "Interná chyba servera" });
   }
 });
 
@@ -74,7 +70,7 @@ router.post("/login", async (req, res) => {
     }
   } catch (error) {
     console.error("Chyba počas prihlasovania.", error);
-    res.status(500).json({ success: false, error: "Interná chyba servera." });
+    res.status(500).json({ success: false, error: "Interná chyba servera" });
   }
 });
 
@@ -91,7 +87,7 @@ router.get("/izba", async (req, res) => {
     console.error("Chyba pri vykonávaní SELECT", error);
     res
       .status(500)
-      .json({ message: "Chyba pri načítaní informácií o izbách." });
+      .json({ message: "Chyba pri načítaní informácií o izbách:" });
   }
 });
 
@@ -118,7 +114,7 @@ router.post("/select/:id", async (req, res) => {
     if (userRole === "admin") {
       return res.status(400).json({
         success: false,
-        error: "Admin nemôže vybrať izbu",
+        error: "Admin si nemôže vyberať izbu!",
       });
     }
 
@@ -129,7 +125,7 @@ router.post("/select/:id", async (req, res) => {
     if (studentHasRoom.rows.length > 0) {
       return res.status(400).json({
         success: false,
-        error: "Študent už má vybratú izbu",
+        error: "Študent už má vybratú izbu!",
       });
     }
 
@@ -143,7 +139,7 @@ router.post("/select/:id", async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        error: "Izbu už zvolil iný študent",
+        error: "Izbu si už zvolil iný študent.",
       });
     }
 
@@ -157,7 +153,7 @@ router.post("/select/:id", async (req, res) => {
       [id_student, id_internat, id, "nevybavené"]
     );
 
-    res.status(200).json({ success: true, message: "Izba úspešne vybratá" });
+    res.status(200).json({ success: true, message: "Izba úspešne vybratá." });
   } catch (error) {
     console.error("Chyba pri výbere izby:", error);
     res.status(500).json({ success: false, error: "Interná chyba servera" });
@@ -175,8 +171,8 @@ router.get("/requests/:id_student", async (req, res) => {
       );
       return result.rows[0].role;
     } catch (error) {
-      console.error("Error fetching user role:", error);
-      throw new Error("Failed to fetch user role");
+      console.error("Chyba pri získavaní roly používateľa:", error);
+      throw new Error("Nepodarilo sa získať rolu používateľa.");
     }
   };
 
@@ -198,8 +194,8 @@ router.get("/requests/:id_student", async (req, res) => {
     const result = await client.query(query, queryParams);
     res.json(result.rows);
   } catch (error) {
-    console.error("Error retrieving requests:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Chyba pri získavaní žiadostí:", error);
+    res.status(500).json({ error: "Interná chyba servera" });
   }
 });
 
@@ -220,8 +216,8 @@ router.get("/fotky/:id_internat", async (req, res) => {
     const result = await client.query(query, values);
     res.json(result.rows);
   } catch (error) {
-    console.error("Error retrieving photos for dormitory", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Chyba pri získavaní fotiek internátov:", error);
+    res.status(500).json({ error: "Interná chyba servera" });
   }
 });
 
@@ -287,7 +283,7 @@ router.delete("/request/:id", async (req, res) => {
     }
   } catch (error) {
     console.error("Chyba pri odstraňovaní žiadosti:", error);
-    res.status(500).json({ success: false, error: "Interná serverová chyba" });
+    res.status(500).json({ success: false, error: "Interná chyba servera" });
   }
 });
 
