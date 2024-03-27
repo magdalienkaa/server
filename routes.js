@@ -91,8 +91,8 @@ router.get("/izba", async (req, res) => {
   }
 });
 
-router.post("/select/:id", async (req, res) => {
-  const { id } = req.params;
+router.post("/select/:id_izba", async (req, res) => {
+  const { id_izba } = req.params;
   const { id_student } = req.body;
 
   const getUserRole = async (id_student) => {
@@ -118,62 +118,44 @@ router.post("/select/:id", async (req, res) => {
       });
     }
 
-    const studentHasRoom = await client.query(
-      "SELECT id_izba, stav FROM ziadosti WHERE id_student = $1",
+    const studentRoomStatus = await client.query(
+      "SELECT maizbu FROM student WHERE id_student = $1",
       [id_student]
     );
 
-    if (studentHasRoom.rows.length > 0) {
-      const stav = studentHasRoom.rows[0].stav;
-      if (stav === "nevybavené" || stav === "schválené") {
+    if (studentRoomStatus.rows.length > 0) {
+      const maizbu = studentRoomStatus.rows[0].maizbu;
+      console.log("Stav izby pre študenta:", maizbu);
+      if (maizbu === "Schválené" || maizbu === "Požiadané") {
         return res.status(400).json({
           success: false,
           error: "Študent už má vybratú izbu!",
         });
-      } else if (stav === "zamietnuté") {
+      } else if (maizbu === "Nepožiadané" || maizbu === "Zamietnuté") {
         const result = await client.query(
           "SELECT id_internat FROM izba WHERE id_izba = $1",
-          [id]
+          [id_izba]
         );
         const id_internat = result.rows[0].id_internat;
         await client.query(
           "INSERT INTO ziadosti(id_student, id_internat, id_izba, stav) VALUES ($1, $2, $3, $4)",
-          [id_student, id_internat, id, "nevybavené"]
+          [id_student, id_internat, id_izba, "nevybavené"]
+        );
+        await client.query(
+          "UPDATE student SET maizbu = 'Požiadané' WHERE id_student = $1",
+          [id_student]
         );
         return res.status(200).json({
           success: true,
-          message: "Študent môže opäť vybrať izbu.",
-          alert: "Študent môže opäť vybrať izbu.",
+          message: "Izba úspešne vybratá.",
         });
       }
     }
 
-    const roomAlreadySelected = await client.query(
-      "SELECT id_student FROM ziadosti WHERE id_izba = $1",
-      [id]
-    );
-
-    if (
-      roomAlreadySelected.rows.length > 0 &&
-      roomAlreadySelected.rows[0].id_student
-    ) {
-      return res.status(400).json({
-        success: false,
-        error: "Izbu si už zvolil iný študent.",
-      });
-    }
-
-    const result = await client.query(
-      "SELECT id_internat FROM izba WHERE id_izba = $1",
-      [id]
-    );
-    const id_internat = result.rows[0].id_internat;
-    await client.query(
-      "INSERT INTO ziadosti(id_student, id_internat, id_izba, stav) VALUES ($1, $2, $3, $4)",
-      [id_student, id_internat, id, "nevybavené"]
-    );
-
-    res.status(200).json({ success: true, message: "Izba úspešne vybratá." });
+    res.status(200).json({
+      success: false,
+      error: "Nepodarilo sa získať stav izby pre tohto študenta.",
+    });
   } catch (error) {
     console.error("Chyba pri výbere izby:", error);
     res.status(500).json({ success: false, error: "Interná chyba servera" });
@@ -265,8 +247,8 @@ router.put("/approve/:id", async (req, res) => {
     ]);
 
     await client.query(
-      "UPDATE student SET id_izba = $1 WHERE id_student = $2",
-      [id_izba, id_student]
+      "UPDATE student SET id_izba = $1, maizbu = $2 WHERE id_student = $3",
+      [id_izba, "Schválené", id_student]
     );
 
     await client.query("UPDATE ziadosti SET stav = NULL WHERE id = $1", [id]);
@@ -288,19 +270,28 @@ router.delete("/request/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await client.query("DELETE FROM ziadosti WHERE id = $1", [
-      id,
+    const deletedRequest = await client.query(
+      "DELETE FROM ziadosti WHERE id = $1 RETURNING id_student",
+      [id]
+    );
+
+    if (deletedRequest.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Žiadosť nebola nájdená",
+      });
+    }
+
+    const id_student = deletedRequest.rows[0].id_student;
+
+    await client.query("UPDATE student SET maizbu = $1 WHERE id_student = $2", [
+      "Nepožiadané",
+      id_student,
     ]);
 
-    if (result.rowCount === 1) {
-      res
-        .status(200)
-        .json({ success: true, message: "Žiadosť bola úspešne odstránená" });
-    } else {
-      res
-        .status(404)
-        .json({ success: false, message: "Žiadosť nebola nájdená" });
-    }
+    res
+      .status(200)
+      .json({ success: true, message: "Žiadosť bola úspešne odstránená" });
   } catch (error) {
     console.error("Chyba pri odstraňovaní žiadosti:", error);
     res.status(500).json({ success: false, error: "Interná chyba servera" });
@@ -332,7 +323,7 @@ router.put("/reject/:id", async (req, res) => {
     ]);
 
     await client.query(
-      "UPDATE student SET id_izba = NULL WHERE id_student = $1",
+      "UPDATE student SET id_izba = NULL, maizbu = 'Zamietnuté' WHERE id_student = $1",
       [requestExists.rows[0].id_student]
     );
 
