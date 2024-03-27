@@ -80,6 +80,7 @@ router.get("/izba", async (req, res) => {
       SELECT izba.*, internat.nazov
       FROM izba
       JOIN internat ON izba.id_internat = internat.id_internat
+      WHERE izba.id_izba NOT IN (SELECT id_izba FROM student WHERE id_izba IS NOT NULL)
     `);
 
     res.json(result.rows);
