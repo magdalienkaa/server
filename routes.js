@@ -12,7 +12,6 @@ router.get("/home", async (req, res) => {
     const result = await client.query(
       "SELECT id_internat, nazov, popis, ENCODE(fotky,'base64') as fotky FROM internat"
     );
-    console.log("Získané informácie o internátoch:", result.rows);
     res.json(result.rows);
   } catch (error) {
     console.error("Chyba pri získavaní informácií o internátoch:", error);
@@ -130,7 +129,6 @@ router.post("/select/:id_izba", async (req, res) => {
 
     if (studentRoomStatus.rows.length > 0) {
       const maizbu = studentRoomStatus.rows[0].maizbu;
-      console.log("Stav izby pre študenta:", maizbu);
       if (maizbu === "Schválené" || maizbu === "Požiadané") {
         return res.status(400).json({
           success: false,
