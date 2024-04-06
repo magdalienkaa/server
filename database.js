@@ -9,14 +9,6 @@ const { Client } = require("pg");
 //   database: "StudentAccommodationDB",
 // });
 
-// const client = new Client({
-//   host: "roundhouse.proxy.rlwy.net",
-//   user: "postgres",
-//   port: 46497,
-//   password: "YjPiiTSfGKwWdLXyibhimVaIvZTFPIKW",
-//   database: "railway",
-// });
-
 const client = new Client({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,

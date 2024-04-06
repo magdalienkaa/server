@@ -61,6 +61,7 @@ router.post("/login", async (req, res) => {
 
     if (isPasswordValid) {
       const { heslo, ...user } = student;
+
       res.json({ success: true, user });
     } else {
       res
