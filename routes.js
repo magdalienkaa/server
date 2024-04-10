@@ -190,11 +190,11 @@ router.get("/requests/:id_student", async (req, res) => {
 
     if (userRole === "admin") {
       query =
-        "SELECT ziadosti.*, izba.cislo_izby, ziadosti.id_student FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba";
+        "SELECT ziadosti.*, izba.cislo_izby, ziadosti.id_student, student.body FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba JOIN student ON ziadosti.id_student = student.id_student";
       queryParams = [];
     } else {
       query =
-        "SELECT ziadosti.*, izba.cislo_izby FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba WHERE ziadosti.id_student = $1";
+        "SELECT ziadosti.*, izba.cislo_izby, student.body FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba JOIN student ON ziadosti.id_student = student.id_student WHERE ziadosti.id_student = $1";
     }
 
     const result = await client.query(query, queryParams);
