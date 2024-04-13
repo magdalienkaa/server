@@ -3,7 +3,6 @@ const path = require("path");
 const router = express.Router();
 const client = require("./database");
 const bodyParser = require("body-parser");
-const csv = require("csv-parser");
 
 router.use(express.static(path.join(__dirname, "frontend", "build")));
 router.use(bodyParser.json());
@@ -351,43 +350,6 @@ router.put("/reject/:id", async (req, res) => {
   } catch (error) {
     console.error("Chyba pri zamietaní žiadosti:", error);
     res.status(500).json({ success: false, error: "Interná chyba servera" });
-  }
-});
-
-router.post("/upload-students", (req, res) => {
-  try {
-    if (!req.files || !req.files.csv) {
-      return res
-        .status(400)
-        .json({ success: false, error: "No file uploaded" });
-    }
-
-    const csvData = req.files.csv.data.toString();
-    const students = [];
-
-    csvData
-      .pipe(csv())
-      .on("data", (row) => {
-        students.push(row);
-      })
-      .on("end", async () => {
-        for (const student of students) {
-          const { id_student, meno, priezvisko, email, heslo, body, role } =
-            student;
-
-          await client.query(
-            "INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-            [id_student, meno, priezvisko, email, heslo, body, role]
-          );
-        }
-
-        res
-          .status(200)
-          .json({ success: true, message: "Students uploaded successfully" });
-      });
-  } catch (error) {
-    console.error("Error uploading students:", error);
-    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 
