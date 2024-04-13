@@ -4,7 +4,6 @@ const router = express.Router();
 const client = require("./database");
 const bodyParser = require("body-parser");
 const csv = require("csv-parser");
-const fs = require("fs");
 
 router.use(express.static(path.join(__dirname, "frontend", "build")));
 router.use(bodyParser.json());
