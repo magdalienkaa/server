@@ -207,7 +207,7 @@ router.get("/requests/:id_student", async (req, res) => {
     if (sortByTime) {
       query +=
         " ORDER BY ziadosti.cas_ziadosti " +
-        (sortByTime === "asc" ? "ASC" : "DESC");
+        (sortByTime === "asc" ? "DESC" : "ASC");
     }
 
     const result = await client.query(query, queryParams);
