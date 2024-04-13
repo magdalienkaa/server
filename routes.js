@@ -3,6 +3,9 @@ const path = require("path");
 const router = express.Router();
 const client = require("./database");
 const bodyParser = require("body-parser");
+const multer = require("multer");
+const fs = require("fs");
+const csv = require("csv-parser");
 
 router.use(express.static(path.join(__dirname, "frontend", "build")));
 router.use(bodyParser.json());
@@ -353,8 +356,56 @@ router.put("/reject/:id", async (req, res) => {
   }
 });
 
+router.post("/upload-students", upload.single("csv"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const filePath = req.file.path;
+    const results = [];
+
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on("data", (data) => results.push(data))
+      .on("end", async () => {
+        // Import data into the PostgreSQL database
+        const client = await pool.connect();
+
+        try {
+          await client.query("BEGIN");
+
+          for (const student of results) {
+            await client.query(
+              `INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+              [
+                student.id_student,
+                student.meno,
+                student.priezvisko,
+                student.email,
+                student.heslo,
+                student.body,
+                student.role,
+              ]
+            );
+          }
+
+          await client.query("COMMIT");
+          res.status(200).json({ message: "Data imported successfully" });
+        } catch (err) {
+          await client.query("ROLLBACK");
+          throw err;
+        } finally {
+          client.release();
+        }
+      });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));
 });
-
 module.exports = router;
