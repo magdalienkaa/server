@@ -3,9 +3,6 @@ const path = require("path");
 const router = express.Router();
 const client = require("./database");
 const bodyParser = require("body-parser");
-const multer = require("multer");
-const fs = require("fs");
-const csv = require("csv-parser");
 
 router.use(express.static(path.join(__dirname, "frontend", "build")));
 router.use(bodyParser.json());
@@ -355,8 +352,6 @@ router.put("/reject/:id", async (req, res) => {
     res.status(500).json({ success: false, error: "Interná chyba servera" });
   }
 });
-
-// router.post("/upload-students", upload.single("csv"), async (req, res) => {  ...});
 
 router.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));
