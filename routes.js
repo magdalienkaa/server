@@ -190,11 +190,11 @@ router.get("/requests/:id_student", async (req, res) => {
 
     if (userRole === "admin") {
       query =
-        "SELECT ziadosti.*, izba.cislo_izby, ziadosti.id_student, student.body FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba JOIN student ON ziadosti.id_student = student.id_student";
+        "SELECT ziadosti.*, izba.cislo_izby, ziadosti.id_student, student.body FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba JOIN student ON ziadosti.id_student = student.id_student ORDER BY ziadosti.cas_ziadosti DESC";
       queryParams = [];
     } else {
       query =
-        "SELECT ziadosti.*, izba.cislo_izby, student.body FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba JOIN student ON ziadosti.id_student = student.id_student WHERE ziadosti.id_student = $1";
+        "SELECT ziadosti.*, izba.cislo_izby, student.body FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba JOIN student ON ziadosti.id_student = student.id_student WHERE ziadosti.id_student = $1 ORDER BY ziadosti.cas_ziadosti DESC";
     }
 
     const { sortByPoints, sortByTime } = req.query;
@@ -210,8 +210,11 @@ router.get("/requests/:id_student", async (req, res) => {
         (sortByTime === "asc" ? "DESC" : "ASC");
     }
 
+    // console.log(query);
+
     const result = await client.query(query, queryParams);
     res.json(result.rows);
+    // res.json(query);
   } catch (error) {
     console.error("Chyba pri získavaní žiadostí:", error);
     res.status(500).json({ error: "Interná chyba servera" });
