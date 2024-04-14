@@ -355,58 +355,46 @@ router.put("/reject/:id", async (req, res) => {
     res.status(500).json({ success: false, error: "Interná chyba servera" });
   }
 });
-const multer = require("multer");
+
 const csv = require("csv-parser");
 const fs = require("fs");
 
-// Konfigurácia Multer pre upload súborov
-const upload = multer({ dest: "uploads/" });
-
-// Endpoint pre importovanie študentov z CSV súboru
-router.post("/import-students", upload.single("file"), async (req, res) => {
+router.post("/upload-students", (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "Nebol vložený žiaden súbor" });
+    if (!req.files || !req.files.csv) {
+      return res
+        .status(400)
+        .json({ success: false, error: "No file uploaded" });
     }
 
-    const results = [];
-    fs.createReadStream(req.file.path)
+    const csvData = req.files.csv.data.toString(); // Získanie obsahu nahraného CSV súboru
+    const students = [];
+
+    // Parsuje CSV súbor
+    csvData
       .pipe(csv())
-      .on("data", (data) => results.push(data))
+      .on("data", (row) => {
+        students.push(row);
+      })
       .on("end", async () => {
-        // Pripravenie údajov na vloženie do databázy
-        const studentsData = results.map((student) => [
-          student.id_student,
-          student.meno,
-          student.priezvisko,
-          student.email,
-          student.heslo,
-          student.body,
-          student.role,
-        ]);
+        // Pre každého študenta v súbore vložíme záznam do databázy
+        for (const student of students) {
+          const { id_student, meno, priezvisko, email, heslo, body, role } =
+            student;
 
-        // Vloženie údajov do tabuľky študentov
-        await client.query(
-          `INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ${studentsData.map(
-            (_, index) =>
-              `($${index * 7 + 1}, $${index * 7 + 2}, $${index * 7 + 3}, $${
-                index * 7 + 4
-              }, $${index * 7 + 5}, $${index * 7 + 6}, $${index * 7 + 7})`
-          )}`,
-          studentsData.flat()
-        );
+          await client.query(
+            "INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            [id_student, meno, priezvisko, email, heslo, body, role]
+          );
+        }
 
-        // Odstránenie nahraného súboru
-        fs.unlinkSync(req.file.path);
-
-        res.status(200).json({
-          success: true,
-          message: "Študenti boli úspešne importovaní",
-        });
+        res
+          .status(200)
+          .json({ success: true, message: "Students uploaded successfully" });
       });
   } catch (error) {
-    console.error("Chyba pri importovaní študentov:", error);
-    res.status(500).json({ error: "Interná chyba servera" });
+    console.error("Error uploading students:", error);
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 });
 
