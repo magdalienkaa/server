@@ -197,18 +197,18 @@ router.get("/requests/:id_student", async (req, res) => {
         "SELECT ziadosti.*, izba.cislo_izby, student.body FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba JOIN student ON ziadosti.id_student = student.id_student WHERE ziadosti.id_student = $1 ORDER BY ziadosti.cas_ziadosti DESC";
     }
 
-    const { sortByPoints, sortByTime } = req.query;
+    // const { sortByPoints, sortByTime } = req.query;
 
-    if (sortByPoints) {
-      query +=
-        " ORDER BY student.body " + (sortByPoints === "asc" ? "ASC" : "DESC");
-    }
+    // if (sortByPoints) {
+    //   query +=
+    //     " ORDER BY student.body " + (sortByPoints === "asc" ? "ASC" : "DESC");
+    // }
 
-    if (sortByTime) {
-      query +=
-        " ORDER BY ziadosti.cas_ziadosti " +
-        (sortByTime === "asc" ? "DESC" : "ASC");
-    }
+    // if (sortByTime) {
+    //   query +=
+    //     " ORDER BY ziadosti.cas_ziadosti " +
+    //     (sortByTime === "asc" ? "DESC" : "ASC");
+    // }
 
     // console.log(query);
 
