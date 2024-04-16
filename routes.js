@@ -412,7 +412,7 @@ async function storeDataInDatabase(data) {
     // Query na vlozenie dat do tabulky
     for (const row of data) {
       await clientFr.query(
-        "INSERT INTO student (id_student, meno, priezvisko, email, body, role) VALUES ($1, $2, $3, $4, $5, $6)",
+        "INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)",
         Object.values(row)
       );
     }
