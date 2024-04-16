@@ -7,12 +7,7 @@ const bodyParser = require("body-parser");
 const csv = require("csv-parser");
 const multer = require("multer");
 const fs = require("fs");
-const cors = require("cors");
 const upload = multer({ dest: "uploads/" });
-const app = express();
-app.use(
-  cors({ origin: "http://https://client-production-8f11.up.railway.app" })
-);
 
 router.use(express.static(path.join(__dirname, "frontend", "build")));
 router.use(bodyParser.json());
@@ -392,7 +387,7 @@ router.put("/reject/:id", async (req, res) => {
 // });
 
 // endpoint pre upload csv suboru a jeho spracovanie     !!! myCSVFile je nazov inputu z formularu na frontende !!!
-app.post("/upload-students", upload.single("myCSVFile"), (req, res) => {
+app.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
   const results = [];
   fs.createReadStream(req.file.path)
     .pipe(csv())
