@@ -392,7 +392,7 @@ router.put("/reject/:id", async (req, res) => {
 // });
 
 // endpoint pre upload csv suboru a jeho spracovanie     !!! myCSVFile je nazov inputu z formularu na frontende !!!
-app.post("/uploadCSV", upload.single("myCSVFile"), (req, res) => {
+app.post("/upload-students", upload.single("myCSVFile"), (req, res) => {
   const results = [];
   fs.createReadStream(req.file.path)
     .pipe(csv())
@@ -412,7 +412,7 @@ async function storeDataInDatabase(data) {
     // Query na vlozenie dat do tabulky
     for (const row of data) {
       await clientFr.query(
-        "INSERT INTO student (id_student, meno, priezvisko, email) VALUES ($1, $2, $3, $4)",
+        "INSERT INTO student (id_student, meno, priezvisko, email, body, role) VALUES ($1, $2, $3, $4, $5, $6)",
         Object.values(row)
       );
     }
