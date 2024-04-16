@@ -4,6 +4,16 @@ const router = express.Router();
 const client = require("./database");
 const bodyParser = require("body-parser");
 
+const csv = require("csv-parser");
+const multer = require("multer");
+const fs = require("fs");
+const cors = require("cors");
+const upload = multer({ dest: "uploads/" });
+const app = express();
+app.use(
+  cors({ origin: "http://https://client-production-8f11.up.railway.app" })
+);
+
 router.use(express.static(path.join(__dirname, "frontend", "build")));
 router.use(bodyParser.json());
 
@@ -197,21 +207,6 @@ router.get("/requests/:id_student", async (req, res) => {
         "SELECT ziadosti.*, izba.cislo_izby, student.body FROM ziadosti JOIN izba ON ziadosti.id_izba = izba.id_izba JOIN student ON ziadosti.id_student = student.id_student WHERE ziadosti.id_student = $1 ORDER BY ziadosti.cas_ziadosti DESC";
     }
 
-    // const { sortByPoints, sortByTime } = req.query;
-
-    // if (sortByPoints) {
-    //   query +=
-    //     " ORDER BY student.body " + (sortByPoints === "asc" ? "ASC" : "DESC");
-    // }
-
-    // if (sortByTime) {
-    //   query +=
-    //     " ORDER BY ziadosti.cas_ziadosti " +
-    //     (sortByTime === "asc" ? "DESC" : "ASC");
-    // }
-
-    // console.log(query);
-
     const result = await client.query(query, queryParams);
     res.json(result.rows);
     // res.json(query);
@@ -356,47 +351,75 @@ router.put("/reject/:id", async (req, res) => {
   }
 });
 
-const csv = require("csv-parser");
-const fs = require("fs");
+// router.post("/upload-students", upload.single("csv"), async (req, res) => {
+//   const filePath = req.file.path;
 
-router.post("/upload-students", (req, res) => {
-  try {
-    if (!req.files || !req.files.csv) {
-      return res
-        .status(400)
-        .json({ success: false, error: "No file uploaded" });
-    }
+//   try {
+//     const client2 = await client.connect();
 
-    const csvData = req.files.csv.data.toString(); // Získanie obsahu nahraného CSV súboru
-    const students = [];
+//     const results = [];
+//     fs.createReadStream(filePath)
+//       .pipe(csvParser())
+//       .on("data", (row) => {
+//         results.push(row);
+//       })
+//       .on("end", async () => {
+//         const query =
+//           'INSERT INTO "student" (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)';
+//         await Promise.all(
+//           results.map(async (row) => {
+//             const { id_student, meno, priezvisko, email, heslo, body, role } =
+//               row;
+//             const values = {
+//               id_student,
+//               meno,
+//               priezvisko,
+//               email,
+//               heslo,
+//               body,
+//               role,
+//             };
+//             await client2.query(query, values);
+//           })
+//         );
+//         client2.release();
+//         res.status(200).send("Súbor bol úspešne nahratý.");
+//       });
+//   } catch (error) {
+//     console.error("Error uploading csv data", error);
+//     res.status(500).send("Error uploading csv data.");
+//   }
+// });
 
-    // Parsuje CSV súbor
-    csvData
-      .pipe(csv())
-      .on("data", (row) => {
-        students.push(row);
-      })
-      .on("end", async () => {
-        // Pre každého študenta v súbore vložíme záznam do databázy
-        for (const student of students) {
-          const { id_student, meno, priezvisko, email, heslo, body, role } =
-            student;
+// endpoint pre upload csv suboru a jeho spracovanie     !!! myCSVFile je nazov inputu z formularu na frontende !!!
+app.post("/uploadCSV", upload.single("myCSVFile"), (req, res) => {
+  const results = [];
+  fs.createReadStream(req.file.path)
+    .pipe(csv())
+    .on("data", (data) => results.push(data))
+    .on("end", async () => {
+      await storeDataInDatabase(results);
 
-          await client.query(
-            "INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-            [id_student, meno, priezvisko, email, heslo, body, role]
-          );
-        }
-
-        res
-          .status(200)
-          .json({ success: true, message: "Students uploaded successfully" });
-      });
-  } catch (error) {
-    console.error("Error uploading students:", error);
-    res.status(500).json({ success: false, error: "Internal server error" });
-  }
+      res.status(200).send("File uploaded and processed successfully");
+    });
 });
+
+// Funkcia na ulozenie dat do databazy
+async function storeDataInDatabase(data) {
+  const clientFr = await client.connect();
+
+  try {
+    // Query na vlozenie dat do tabulky
+    for (const row of data) {
+      await clientFr.query(
+        "INSERT INTO student (id_student, meno, priezvisko, email) VALUES ($1, $2, $3, $4)",
+        Object.values(row)
+      );
+    }
+  } finally {
+    clientFr.release();
+  }
+}
 
 router.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));

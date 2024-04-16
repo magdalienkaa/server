@@ -1,0 +1,4 @@
+id_student,meno,priezvisko,email,heslo,body,role
+1,John,Doe,johndoe@example.com,password123,85,student
+2,Jane,Smith,janesmith@example.com,securepwd456,78,student
+3,Michael,Johnson,michaeljohnson@example.com,safepassword789,92,student
