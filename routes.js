@@ -387,7 +387,7 @@ router.put("/reject/:id", async (req, res) => {
 // });
 
 // endpoint pre upload csv suboru a jeho spracovanie     !!! myCSVFile je nazov inputu z formularu na frontende !!!
-app.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
+router.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
   const results = [];
   fs.createReadStream(req.file.path)
     .pipe(csv())
