@@ -3,7 +3,7 @@ const app = express();
 const routes = require("./routes");
 const cors = require("cors");
 
-app.use(cors({ origin: "https://client-production-8f11.up.railway.app" }));
+app.use(cors());
 
 app.use(function (req, res, next) {
   res.header(
