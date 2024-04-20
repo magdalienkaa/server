@@ -45,6 +45,9 @@ router.get("/info/:id", async (req, res) => {
   }
 });
 
+const jwt = require("jsonwebtoken");
+const jwtSecret = process.env.JWT_SECRET;
+
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -67,7 +70,12 @@ router.post("/login", async (req, res) => {
     if (isPasswordValid) {
       const { heslo, ...user } = student;
 
-      res.json({ success: true, user });
+      // Vygenerovanie JWT
+      const token = jwt.sign({ userId: user.id }, jwtSecret, {
+        expiresIn: "1h",
+      });
+
+      res.json({ success: true, user, token });
     } else {
       res
         .status(401)
