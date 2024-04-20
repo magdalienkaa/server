@@ -9,6 +9,9 @@ const multer = require("multer");
 const fs = require("fs");
 const upload = multer({ dest: "uploads/" });
 
+const jwt = require("jsonwebtoken");
+const jwtSecret = process.env.JWT_SECRET;
+
 router.use(express.static(path.join(__dirname, "frontend", "build")));
 router.use(bodyParser.json());
 
@@ -44,9 +47,6 @@ router.get("/info/:id", async (req, res) => {
     res.status(500).json({ error: "Interná chyba servera" });
   }
 });
-
-const jwt = require("jsonwebtoken");
-const jwtSecret = process.env.JWT_SECRET;
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
