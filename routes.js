@@ -71,9 +71,14 @@ router.post("/login", async (req, res) => {
       const { heslo, ...user } = student;
 
       // Vygenerovanie JWT
-      const token = jwt.sign({ userId: user.id }, jwtSecret, {
+      const token = jwt.sign({ userId: user.id_student }, jwtSecret, {
         expiresIn: "1h",
       });
+
+      client.query("INSERT INTO token(token, id_student) VALUES ($1, $2)", [
+        token,
+        student.id_student,
+      ]);
 
       res.json({ success: true, user, token });
     } else {
@@ -353,46 +358,6 @@ router.put("/reject/:id", async (req, res) => {
     res.status(500).json({ success: false, error: "Interná chyba servera" });
   }
 });
-
-// router.post("/upload-students", upload.single("csv"), async (req, res) => {
-//   const filePath = req.file.path;
-
-//   try {
-//     const client2 = await client.connect();
-
-//     const results = [];
-//     fs.createReadStream(filePath)
-//       .pipe(csvParser())
-//       .on("data", (row) => {
-//         results.push(row);
-//       })
-//       .on("end", async () => {
-//         const query =
-//           'INSERT INTO "student" (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)';
-//         await Promise.all(
-//           results.map(async (row) => {
-//             const { id_student, meno, priezvisko, email, heslo, body, role } =
-//               row;
-//             const values = {
-//               id_student,
-//               meno,
-//               priezvisko,
-//               email,
-//               heslo,
-//               body,
-//               role,
-//             };
-//             await client2.query(query, values);
-//           })
-//         );
-//         client2.release();
-//         res.status(200).send("Súbor bol úspešne nahratý.");
-//       });
-//   } catch (error) {
-//     console.error("Error uploading csv data", error);
-//     res.status(500).send("Error uploading csv data.");
-//   }
-// });
 
 // endpoint pre upload csv suboru a jeho spracovanie     !!! myCSVFile je nazov inputu z formularu na frontende !!!
 router.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
