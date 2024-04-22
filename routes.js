@@ -420,6 +420,7 @@ async function storeDataInDatabase(data) {
         "INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)",
         Object.values(row)
       );
+      print(row);
     }
   } catch (error) {
     console.error("Error uploading csv data", error);
