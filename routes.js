@@ -408,7 +408,7 @@ router.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
       if (success) {
         res.status(200).send("File uploaded and processed successfully");
       } else {
-        console.log("Error uploading csv data", error);
+        console.log("Error uploading csv data");
         res.status(500).send("Error uploading csv data.");
       }
     });
