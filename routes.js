@@ -75,6 +75,7 @@ router.post("/login", async (req, res) => {
         expiresIn: "1h",
       });
 
+      // Ulozenie tokena do DB
       client.query("INSERT INTO token(token, id_student) VALUES ($1, $2)", [
         token,
         student.id_student,
@@ -405,3 +406,37 @@ router.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "build", "index.html"));
 });
 module.exports = router;
+
+// endpoint pre ziskanie informacii o pouzivatelovi na zaklade tokenu
+router.post("/me", async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    // Najdi záznam v databázi podle tokenu
+    const tokenRecord = await client.query(
+      "SELECT * FROM token WHERE token = $1",
+      [token]
+    );
+
+    // Pokud není nalezen žádný záznam, odpověz chybou
+    if (!tokenRecord) {
+      return res.status(404).json({ message: "Token sa nenasiel." });
+    }
+
+    const result = await client.query(
+      "SELECT * FROM student WHERE id_student = $1",
+      [tokenRecord.rows[0].id_student]
+    );
+
+    const student = result.rows[0];
+    const { heslo, ...user } = student;
+
+    res.status(200).json({ user });
+  } catch (error) {
+    // Pokud dojde k chybě při zpracování požadavku, odpověz chybou
+    console.error("Chyba při zpracování požadavku:", error);
+    res
+      .status(500)
+      .json({ message: "Nastala chyba při zpracování požadavku." });
+  }
+});
