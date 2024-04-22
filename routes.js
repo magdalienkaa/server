@@ -406,6 +406,7 @@ router.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
       const success = await storeDataInDatabase(results);
 
       if (success) {
+        console.log("Upload success:", success);
         res.status(200).send("File uploaded and processed successfully");
       } else {
         console.log("Error uploading csv data");
@@ -425,11 +426,13 @@ async function storeDataInDatabase(data) {
         "INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)",
         Object.values(row)
       );
-      print(row);
+      console.log(row);
     }
+    return 1;
   } catch (error) {
     console.log("Error - uploading files");
     console.log(error);
+    return 0;
   }
 }
 
