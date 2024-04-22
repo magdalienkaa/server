@@ -403,9 +403,14 @@ router.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
     .pipe(csv())
     .on("data", (data) => results.push(data))
     .on("end", async () => {
-      await storeDataInDatabase(results);
+      const success = await storeDataInDatabase(results);
 
-      res.status(200).send("File uploaded and processed successfully");
+      if (success) {
+        res.status(200).send("File uploaded and processed successfully");
+      } else {
+        console.error("Error uploading csv data", error);
+        res.status(500).send("Error uploading csv data.");
+      }
     });
 });
 
@@ -423,8 +428,8 @@ async function storeDataInDatabase(data) {
       print(row);
     }
   } catch (error) {
-    console.error("Error uploading csv data", error);
-    res.status(500).send("Error uploading csv data.");
+    console.log("Error - uploading files");
+    console.log(error);
   }
 }
 
