@@ -360,10 +360,7 @@ router.put("/reject/:id", async (req, res) => {
   }
 });
 
-// endpoint pre upload csv suboru a jeho spracovanie     !!! myCSVFile je nazov inputu z formularu na frontende !!!
 router.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
-  // res.status(200).send("TEST SUCCESS");
-  // return;
   const results = [];
   fs.createReadStream(req.file.path)
     .pipe(csv())
@@ -372,21 +369,17 @@ router.post("/uploadstudents", upload.single("myCSVFile"), (req, res) => {
       const success = await storeDataInDatabase(results);
 
       if (success) {
-        console.log("Upload success:", success);
-        res.status(200).send("File uploaded and processed successfully");
+        console.log("Nahratie úspešné:", success);
+        res.status(200).send("Súbor bol úspešne nahraný.");
       } else {
-        console.log("Error uploading csv data");
-        res.status(500).send("Error uploading csv data.");
+        console.log("Chyba pri nahrávaní CSV súboru.");
+        res.status(500).send("Chyba pri nahrávaní CSV súboru.");
       }
     });
 });
 
-// Funkcia na ulozenie dat do databazy
 async function storeDataInDatabase(data) {
-  // const clientFr = await client.connect();
-
   try {
-    // Query na vlozenie dat do tabulky
     for (const row of data) {
       await client.query(
         "INSERT INTO student (id_student, meno, priezvisko, email, heslo, body, role) VALUES ($1, $2, $3, $4, $5, $6, $7)",
@@ -396,7 +389,42 @@ async function storeDataInDatabase(data) {
     }
     return 1;
   } catch (error) {
-    console.log("Error - uploading files");
+    console.log("Chyba pri nahrávaní súboru.");
+    console.log(error);
+    return 0;
+  }
+}
+
+router.post("/uploadroom", upload.single("myCSVFile"), (req, res) => {
+  const results = [];
+  fs.createReadStream(req.file.path)
+    .pipe(csv())
+    .on("data", (data) => results.push(data))
+    .on("end", async () => {
+      const success = await storeDataInDatabase(results);
+
+      if (success) {
+        console.log("Nahratie úspešné:", success);
+        res.status(200).send("Súbor bol úspešne nahraný.");
+      } else {
+        console.log("Chyba pri nahrávaní CSV súboru.");
+        res.status(500).send("Chyba pri nahrávaní CSV súboru.");
+      }
+    });
+});
+
+async function storeDataInDatabase(data) {
+  try {
+    for (const row of data) {
+      await client.query(
+        "INSERT INTO izba (id_izba, cislo_izby, id_internat, orientacia, stav_rekonstrukcie, umiestnenie_na_chodbe, typ_izby, poschodie, blok, cena) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+        Object.values(row)
+      );
+      console.log(row);
+    }
+    return 1;
+  } catch (error) {
+    console.log("Chyba pri nahrávaní súboru.");
     console.log(error);
     return 0;
   }
@@ -407,20 +435,17 @@ router.get("*", (req, res) => {
 });
 module.exports = router;
 
-// endpoint pre ziskanie informacii o pouzivatelovi na zaklade tokenu
 router.post("/me", async (req, res) => {
   const { token } = req.body;
 
   try {
-    // Najdi záznam v databázi podle tokenu
     const tokenRecord = await client.query(
       "SELECT * FROM token WHERE token = $1",
       [token]
     );
 
-    // Pokud není nalezen žádný záznam, odpověz chybou
     if (!tokenRecord) {
-      return res.status(404).json({ message: "Token sa nenasiel." });
+      return res.status(404).json({ message: "Token sa nenašiel." });
     }
 
     const result = await client.query(
@@ -433,10 +458,9 @@ router.post("/me", async (req, res) => {
 
     res.status(200).json({ user });
   } catch (error) {
-    // Pokud dojde k chybě při zpracování požadavku, odpověz chybou
-    console.error("Chyba při zpracování požadavku:", error);
+    console.error("Chyba pri spracovaní požiadavky:", error);
     res
       .status(500)
-      .json({ message: "Nastala chyba při zpracování požadavku." });
+      .json({ message: "Nastala chyba pri spracovaní požiadavky." });
   }
 });
